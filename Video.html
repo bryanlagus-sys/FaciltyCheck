@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FacilityCheck — Demo Video</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0F1E35; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow:hidden; }
+
+.stage { position:relative; width:100vw; height:100vh; display:flex; align-items:center; justify-content:center; }
+
+/* Background */
+.bg-circles { position:absolute; inset:0; overflow:hidden; }
+.bg-circles::before { content:''; position:absolute; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle,rgba(26,86,219,0.15),transparent 70%); top:-100px; left:-100px; }
+.bg-circles::after  { content:''; position:absolute; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,rgba(26,86,219,0.1),transparent 70%); bottom:-80px; right:-80px; }
+
+/* Phone */
+.phone-wrap { position:relative; z-index:10; }
+.phone { width:280px; height:560px; background:#1E293B; border-radius:36px; padding:10px; box-shadow:0 40px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.08); position:relative; }
+.phone-screen { width:100%; height:100%; background:#F8FAFC; border-radius:27px; overflow:hidden; position:relative; }
+.notch { position:absolute; top:0; left:50%; transform:translateX(-50%); width:80px; height:24px; background:#1E293B; border-radius:0 0 14px 14px; z-index:20; }
+
+/* Screen layers */
+.screen-layer { position:absolute; inset:0; display:flex; flex-direction:column; opacity:0; transition:opacity 0.5s; pointer-events:none; }
+.screen-layer.active { opacity:1; pointer-events:auto; }
+
+/* Topbar */
+.topbar { background:#0F1E35; padding:28px 12px 8px; display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.logo-text { font-size:13px; font-weight:700; color:#fff; }
+.logo-text span { color:#3B82F6; }
+.user-pill { margin-left:auto; display:flex; align-items:center; gap:5px; background:rgba(255,255,255,0.1); border-radius:20px; padding:3px 8px 3px 3px; }
+.user-av { width:20px; height:20px; border-radius:50%; background:#1A56DB; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:#fff; }
+.user-name { font-size:9px; color:#fff; font-weight:500; }
+
+/* Content area */
+.content { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+
+/* Login screen */
+.login-bg { flex:1; background:linear-gradient(135deg,#0F1E35,#162844); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; gap:12px; }
+.login-card { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:20px; width:100%; }
+.login-title { font-size:16px; font-weight:700; color:#fff; text-align:center; margin-bottom:4px; }
+.login-sub { font-size:9px; color:rgba(255,255,255,0.4); text-align:center; margin-bottom:14px; }
+.role-row { display:flex; gap:6px; margin-bottom:12px; }
+.role-btn { flex:1; padding:7px; font-size:9px; font-weight:600; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:transparent; color:rgba(255,255,255,0.4); text-align:center; transition:all 0.3s; }
+.role-btn.active { background:#1A56DB; border-color:#1A56DB; color:#fff; }
+.login-field { margin-bottom:8px; }
+.login-label { font-size:8px; color:rgba(255,255,255,0.5); margin-bottom:3px; }
+.login-input { width:100%; padding:7px 10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); border-radius:7px; font-size:9px; color:#fff; }
+.login-btn { width:100%; padding:9px; background:#1A56DB; border:none; border-radius:8px; font-size:10px; font-weight:700; color:#fff; margin-top:4px; cursor:pointer; }
+
+/* QR Screen */
+.qr-area { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px; }
+.qr-box { width:140px; height:140px; border:2px solid rgba(255,255,255,0.3); border-radius:12px; position:relative; overflow:hidden; background:#1A2540; display:flex; align-items:center; justify-content:center; }
+.scan-line { position:absolute; left:10px; right:10px; height:2px; background:linear-gradient(90deg,transparent,#3B82F6,#60A5FA,#3B82F6,transparent); box-shadow:0 0 8px rgba(59,130,246,0.8); animation:scan 2s ease-in-out infinite; }
+@keyframes scan { 0%,100%{top:10px;opacity:.4} 50%{top:118px;opacity:1} }
+.qr-svg { opacity:0.2; }
+.qr-label { font-size:10px; color:rgba(255,255,255,0.5); text-align:center; line-height:1.5; }
+.qr-scan-btn { width:100%; padding:12px; background:#1A56DB; border:none; border-radius:10px; font-size:11px; font-weight:700; color:#fff; display:flex; align-items:center; justify-content:center; gap:6px; }
+
+/* Object screen */
+.obj-header { padding:10px 12px; display:flex; align-items:center; gap:8px; border-bottom:1px solid #E2E8F0; background:#fff; flex-shrink:0; }
+.obj-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.obj-title { font-size:11px; font-weight:700; color:#0F172A; }
+.obj-sub { font-size:8px; color:#64748B; margin-top:1px; }
+.badge { font-size:8px; font-weight:700; padding:2px 7px; border-radius:10px; margin-left:auto; flex-shrink:0; }
+.badge-red { background:#FEE2E2; color:#DC2626; }
+.badge-green { background:#D1FAE5; color:#065F46; }
+.badge-amber { background:#FEF3C7; color:#78350F; }
+.tabs { display:flex; background:#F1F5F9; margin:6px; border-radius:8px; padding:3px; flex-shrink:0; }
+.tab { flex:1; padding:5px 2px; font-size:8px; text-align:center; border-radius:6px; color:#64748B; font-weight:500; transition:all 0.2s; }
+.tab.active { background:#fff; color:#0F172A; font-weight:700; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+
+/* Wartung form */
+.form-area { flex:1; padding:8px 10px; display:flex; flex-direction:column; gap:6px; overflow:hidden; }
+.field-label { font-size:8px; font-weight:600; color:#64748B; text-transform:uppercase; letter-spacing:0.3px; }
+.field-input { width:100%; padding:6px 8px; border:1px solid #E2E8F0; border-radius:7px; font-size:9px; color:#1E293B; background:#fff; }
+.sig-area { border:1px solid #E2E8F0; border-radius:7px; background:#F8FAFC; height:50px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+.sig-hint { font-size:8px; color:#CBD5E1; }
+.sig-line { position:absolute; bottom:12px; left:10px; right:10px; height:1px; background:#E2E8F0; }
+.submit-btn { width:100%; padding:9px; background:#1A56DB; border:none; border-radius:8px; font-size:10px; font-weight:700; color:#fff; }
+
+/* Success */
+.success-area { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; gap:8px; }
+.success-icon { width:52px; height:52px; border-radius:50%; background:#D1FAE5; display:flex; align-items:center; justify-content:center; }
+.success-title { font-size:14px; font-weight:700; color:#0F172A; }
+.success-sub { font-size:9px; color:#64748B; text-align:center; line-height:1.5; }
+.success-btns { display:flex; gap:6px; width:100%; }
+.btn-sec { flex:1; padding:8px; border:1px solid #E2E8F0; border-radius:8px; font-size:9px; text-align:center; color:#475569; font-weight:500; }
+.btn-pri { flex:1; padding:8px; background:#1A56DB; border-radius:8px; font-size:9px; text-align:center; color:#fff; font-weight:700; }
+
+/* Dashboard */
+.dash-content { flex:1; padding:8px; overflow:hidden; display:flex; flex-direction:column; gap:6px; }
+.stat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; }
+.stat-card { background:#fff; border:1px solid #E2E8F0; border-radius:8px; padding:6px; }
+.stat-val { font-size:16px; font-weight:700; line-height:1; }
+.stat-lbl { font-size:7px; color:#64748B; margin-top:2px; }
+.building-card { background:#fff; border:1px solid #E2E8F0; border-radius:8px; overflow:hidden; }
+.building-name { font-size:9px; font-weight:700; color:#0F172A; padding:5px 8px; border-bottom:1px solid #F1F5F9; }
+.obj-row { display:flex; align-items:center; gap:6px; padding:4px 8px; border-bottom:1px solid #F8FAFC; }
+.dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.dot-g { background:#059669; }
+.dot-a { background:#D97706; }
+.dot-r { background:#DC2626; box-shadow:0 0 4px rgba(220,38,38,0.5); }
+.obj-n { font-size:8px; color:#1E293B; flex:1; }
+.obj-d { font-size:7px; color:#94A3B8; }
+
+/* Nav bottom */
+.bottom-nav { background:#fff; border-top:1px solid #E2E8F0; display:flex; padding:4px 0 8px; flex-shrink:0; }
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; padding:4px; }
+.nav-icon { font-size:14px; }
+.nav-label { font-size:7px; font-weight:600; }
+.nav-item.active .nav-label { color:#1A56DB; }
+.nav-item:not(.active) .nav-label { color:#94A3B8; }
+
+/* Admin nav tabs */
+.admin-nav { display:flex; background:#F1F5F9; border-bottom:1px solid #E2E8F0; flex-shrink:0; }
+.admin-tab { flex:1; padding:7px 2px; font-size:8px; font-weight:600; text-align:center; color:#64748B; border-bottom:2px solid transparent; }
+.admin-tab.active { color:#1A56DB; border-bottom-color:#1A56DB; background:#fff; }
+
+/* Cursor */
+.cursor { position:absolute; width:20px; height:20px; border-radius:50%; background:rgba(26,86,219,0.8); pointer-events:none; transition:all 0.4s cubic-bezier(.25,.46,.45,.94); z-index:100; box-shadow:0 0 0 4px rgba(26,86,219,0.2); transform:translate(-50%,-50%); }
+.cursor.clicking { transform:translate(-50%,-50%) scale(0.7); background:rgba(26,86,219,1); }
+
+/* Side info */
+.side-info { position:absolute; right:-220px; top:50%; transform:translateY(-50%); width:200px; display:flex; flex-direction:column; gap:8px; }
+.info-card { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:12px 14px; opacity:0; transform:translateX(20px); transition:all 0.5s; }
+.info-card.visible { opacity:1; transform:translateX(0); }
+.info-step { font-size:10px; font-weight:700; color:#3B82F6; margin-bottom:4px; }
+.info-text { font-size:11px; color:rgba(255,255,255,0.8); line-height:1.5; }
+
+/* Progress */
+.progress-bar { position:absolute; bottom:30px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:20; }
+.prog-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.2); transition:all 0.3s; }
+.prog-dot.active { background:#3B82F6; width:24px; border-radius:4px; }
+
+/* Title overlay */
+.title-overlay { position:absolute; top:30px; left:50%; transform:translateX(-50%); text-align:center; z-index:20; }
+.title-overlay h1 { font-size:22px; font-weight:800; color:#fff; letter-spacing:-0.5px; }
+.title-overlay h1 span { color:#3B82F6; }
+.title-overlay p { font-size:11px; color:rgba(255,255,255,0.5); margin-top:4px; }
+
+/* Signature drawing animation */
+.sig-drawing { position:absolute; top:8px; left:10px; right:10px; bottom:8px; }
+.sig-path { stroke:#1A56DB; stroke-width:2; fill:none; stroke-linecap:round; stroke-dasharray:200; stroke-dashoffset:200; transition:stroke-dashoffset 1.5s ease; }
+.sig-path.drawn { stroke-dashoffset:0; }
+
+/* Flash effect */
+.flash { position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; transition:opacity 0.2s; z-index:50; border-radius:27px; }
+.flash.show { opacity:0.9; }
+</style>
+</head>
+<body>
+
+<div class="bg-circles"></div>
+
+<div class="title-overlay">
+  <h1>Facility<span>Check</span></h1>
+  <p>Digitales Wartungsmanagement — Demo</p>
+</div>
+
+<div class="stage">
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="phone-screen" id="phoneScreen">
+
+        <!-- FLASH -->
+        <div class="flash" id="flash"></div>
+
+        <!-- CURSOR -->
+        <div class="cursor" id="cursor"></div>
+
+        <!-- S1: LOGIN -->
+        <div class="screen-layer active" id="s1">
+          <div class="login-bg">
+            <div style="text-align:center;">
+              <div style="font-size:22px;font-weight:800;color:#fff;">Facility<span style="color:#3B82F6;">Check</span></div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px;">Wartungsmanagement Plattform</div>
+            </div>
+            <div class="login-card">
+              <div style="font-size:8px;font-weight:600;color:rgba(255,255,255,0.4);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Anmelden als</div>
+              <div class="role-row">
+                <div class="role-btn" id="roleAdmin">Admin</div>
+                <div class="role-btn active" id="roleTech">Techniker</div>
+              </div>
+              <div class="login-field">
+                <div class="login-label">Techniker wählen</div>
+                <div class="login-input" id="techName">Dragan</div>
+              </div>
+              <div class="login-field">
+                <div class="login-label">Passwort</div>
+                <div class="login-input">••••••••</div>
+              </div>
+              <div class="login-btn">Anmelden →</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- S2: TECHNIKER HOME / QR -->
+        <div class="screen-layer" id="s2">
+          <div class="topbar">
+            <div class="logo-text">Facility<span>Check</span></div>
+            <div class="user-pill">
+              <div class="user-av">DR</div>
+              <div class="user-name">Dragan</div>
+            </div>
+          </div>
+          <div class="content">
+            <div style="padding:8px 10px 0;">
+              <div style="background:#0F1E35;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <div style="width:34px;height:34px;border-radius:50%;background:#1A56DB;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;">DR</div>
+                <div><div style="font-size:11px;font-weight:700;color:#fff;">Hallo Dragan</div><div style="font-size:8px;color:rgba(255,255,255,0.5);">Heute, Montag 24. März 2026</div></div>
+              </div>
+              <button id="qrBtn" style="width:100%;padding:11px;background:#1A56DB;border:none;border-radius:10px;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px;">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="5" height="5" rx="0.8" stroke="white" stroke-width="1.2"/><rect x="10" y="1" width="5" height="5" rx="0.8" stroke="white" stroke-width="1.2"/><rect x="1" y="10" width="5" height="5" rx="0.8" stroke="white" stroke-width="1.2"/><rect x="2.5" y="2.5" width="2" height="2" fill="white"/><rect x="11.5" y="2.5" width="2" height="2" fill="white"/><rect x="2.5" y="11.5" width="2" height="2" fill="white"/><rect x="11" y="11" width="1.5" height="1.5" fill="white"/><rect x="13.5" y="11" width="1.5" height="1.5" fill="white"/><rect x="11" y="13.5" width="1.5" height="1.5" fill="white"/></svg>
+                QR-Code scannen
+              </button>
+              <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
+                <div style="padding:8px 10px;border-bottom:1px solid #F1F5F9;display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:10px;font-weight:700;">Heutige Aufgaben</span>
+                  <span style="font-size:8px;background:#EFF6FF;color:#1A56DB;padding:2px 7px;border-radius:8px;font-weight:600;">3 offen</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #F8FAFC;">
+                  <div style="width:30px;height:30px;border-radius:7px;background:#FEE2E2;display:flex;align-items:center;justify-content:center;">
+                    <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C9 1.5 13.5 5.5 13.5 10C13.5 13.5 11.5 16 9 16.5C6.5 16 4.5 13.5 4.5 10C4.5 5.5 9 1.5 9 1.5Z" stroke="#DC2626" stroke-width="1.5"/></svg>
+                  </div>
+                  <div><div style="font-size:9px;font-weight:600;color:#0F172A;">Brandschutzklappe 1</div><div style="font-size:8px;color:#64748B;">O.M.Platz 1</div></div>
+                  <span style="margin-left:auto;font-size:8px;background:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:6px;font-weight:600;">Offen</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;">
+                  <div style="width:30px;height:30px;border-radius:7px;background:#FEE2E2;display:flex;align-items:center;justify-content:center;">
+                    <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#DC2626" stroke-width="1.5"/><path d="M9 3v3M9 12v3M3 9h3M12 9h3" stroke="#DC2626" stroke-width="1.2"/></svg>
+                  </div>
+                  <div><div style="font-size:9px;font-weight:600;color:#0F172A;">Lüftung A2</div><div style="font-size:8px;color:#64748B;">Dr. Bohrgasse 9</div></div>
+                  <span style="margin-left:auto;font-size:8px;background:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:6px;font-weight:600;">Offen</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item active"><div class="nav-icon">⊞</div><div class="nav-label" style="color:#1A56DB;">Übersicht</div></div>
+            <div class="nav-item"><div class="nav-icon" style="font-size:12px;">📅</div><div class="nav-label">Kalender</div></div>
+          </div>
+        </div>
+
+        <!-- S3: QR SCANNER -->
+        <div class="screen-layer" id="s3" style="background:#000;">
+          <div style="position:absolute;top:0;left:0;right:0;padding:28px 12px 8px;display:flex;align-items:center;justify-content:space-between;z-index:10;">
+            <div style="background:rgba(255,255,255,0.15);border-radius:20px;padding:5px 12px;font-size:8px;font-weight:600;color:#fff;">← Abbrechen</div>
+            <div style="font-size:10px;font-weight:600;color:#fff;">QR-Code scannen</div>
+            <div style="width:60px;"></div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;">
+            <div style="width:160px;height:160px;position:relative;">
+              <div style="position:absolute;top:0;left:0;width:20px;height:20px;border-top:2.5px solid #fff;border-left:2.5px solid #fff;border-radius:3px 0 0 0;"></div>
+              <div style="position:absolute;top:0;right:0;width:20px;height:20px;border-top:2.5px solid #fff;border-right:2.5px solid #fff;border-radius:0 3px 0 0;"></div>
+              <div style="position:absolute;bottom:0;left:0;width:20px;height:20px;border-bottom:2.5px solid #fff;border-left:2.5px solid #fff;border-radius:0 0 0 3px;"></div>
+              <div style="position:absolute;bottom:0;right:0;width:20px;height:20px;border-bottom:2.5px solid #fff;border-right:2.5px solid #fff;border-radius:0 0 3px 0;"></div>
+              <div class="scan-line" id="scanLine"></div>
+              <div style="position:absolute;inset:8px;background:rgba(255,255,255,0.04);border-radius:3px;display:flex;align-items:center;justify-content:center;">
+                <svg width="80" height="80" viewBox="0 0 80 80" fill="none" opacity="0.15">
+                  <rect x="5" y="5" width="30" height="30" rx="3" stroke="white" stroke-width="2.5"/>
+                  <rect x="12" y="12" width="16" height="16" rx="1.5" fill="white"/>
+                  <rect x="45" y="5" width="30" height="30" rx="3" stroke="white" stroke-width="2.5"/>
+                  <rect x="52" y="12" width="16" height="16" rx="1.5" fill="white"/>
+                  <rect x="5" y="45" width="30" height="30" rx="3" stroke="white" stroke-width="2.5"/>
+                  <rect x="12" y="52" width="16" height="16" rx="1.5" fill="white"/>
+                  <rect x="45" y="47" width="8" height="8" fill="white"/><rect x="57" y="47" width="8" height="8" fill="white"/>
+                  <rect x="69" y="47" width="8" height="8" fill="white"/><rect x="45" y="59" width="8" height="8" fill="white"/>
+                  <rect x="57" y="59" width="8" height="8" fill="white"/><rect x="69" y="69" width="8" height="8" fill="white"/>
+                  <rect x="45" y="69" width="8" height="8" fill="white"/>
+                </svg>
+              </div>
+            </div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.5);text-align:center;line-height:1.6;">Halte die Kamera auf den QR-Code<br>am Objekt</div>
+          </div>
+        </div>
+
+        <!-- S4: OBJEKT DETAIL -->
+        <div class="screen-layer" id="s4">
+          <div class="topbar"><div class="logo-text">Facility<span>Check</span></div><div class="user-pill"><div class="user-av">DR</div><div class="user-name">Dragan</div></div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;flex-shrink:0;">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6L8 10" stroke="#1A56DB" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span style="font-size:9px;color:#1A56DB;font-weight:600;">Zurück</span>
+          </div>
+          <div class="obj-header">
+            <div class="obj-icon" style="background:#FEF3C7;">🔥</div>
+            <div><div class="obj-title">Brandschutzklappe 1</div><div class="obj-sub">📍 Oskar-Morgenstern-Platz 1</div></div>
+            <div class="badge badge-red">Überfällig</div>
+          </div>
+          <div class="tabs" id="objTabs">
+            <div class="tab active">Info</div>
+            <div class="tab" id="wartTab">Wartung</div>
+            <div class="tab">Mangel</div>
+            <div class="tab">Verlauf</div>
+          </div>
+          <div class="content" style="padding:8px 10px;gap:4px;display:flex;flex-direction:column;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+              <div style="background:#fff;border:1px solid #E2E8F0;border-radius:7px;padding:7px 8px;">
+                <div style="font-size:7px;font-weight:600;color:#64748B;text-transform:uppercase;margin-bottom:2px;">Intervall</div>
+                <div style="font-size:9px;font-weight:600;color:#0F172A;">Jährlich</div>
+              </div>
+              <div style="background:#fff;border:1px solid #E2E8F0;border-radius:7px;padding:7px 8px;">
+                <div style="font-size:7px;font-weight:600;color:#64748B;text-transform:uppercase;margin-bottom:2px;">Status</div>
+                <div style="font-size:9px;font-weight:600;color:#DC2626;">Überfällig</div>
+              </div>
+              <div style="background:#fff;border:1px solid #E2E8F0;border-radius:7px;padding:7px 8px;">
+                <div style="font-size:7px;font-weight:600;color:#64748B;text-transform:uppercase;margin-bottom:2px;">Letzte Wartung</div>
+                <div style="font-size:9px;font-weight:600;color:#0F172A;">15.03.2025</div>
+              </div>
+              <div style="background:#fff;border:1px solid #E2E8F0;border-radius:7px;padding:7px 8px;">
+                <div style="font-size:7px;font-weight:600;color:#64748B;text-transform:uppercase;margin-bottom:2px;">Nächste fällig</div>
+                <div style="font-size:9px;font-weight:600;color:#DC2626;">15.03.2026</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- S5: WARTUNG FORM -->
+        <div class="screen-layer" id="s5">
+          <div class="topbar"><div class="logo-text">Facility<span>Check</span></div><div class="user-pill"><div class="user-av">DR</div><div class="user-name">Dragan</div></div></div>
+          <div class="obj-header">
+            <div class="obj-icon" style="background:#FEF3C7;">🔥</div>
+            <div><div class="obj-title">Brandschutzklappe 1</div><div class="obj-sub">📍 Oskar-Morgenstern-Platz 1</div></div>
+            <div class="badge badge-red">Überfällig</div>
+          </div>
+          <div class="tabs">
+            <div class="tab">Info</div>
+            <div class="tab active">Wartung</div>
+            <div class="tab">Mangel</div>
+            <div class="tab">Verlauf</div>
+          </div>
+          <div class="form-area">
+            <div style="display:flex;align-items:center;gap:6px;padding:7px 9px;background:#F8FAFC;border-radius:8px;margin-bottom:2px;">
+              <div style="width:22px;height:22px;border-radius:50%;background:#1A56DB;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;">DR</div>
+              <span style="font-size:9px;color:#64748B;">Dragan · Heute, 14:32 Uhr</span>
+            </div>
+            <div class="field-label">Notiz (optional)</div>
+            <div class="field-input" id="wartungNotiz" style="color:#94A3B8;">Jahresinspektion durchgeführt...</div>
+            <div class="field-label">Unterschrift</div>
+            <div class="sig-area">
+              <span class="sig-hint" id="sigHint">✍ Hier unterschreiben</span>
+              <svg class="sig-drawing" viewBox="0 0 200 40">
+                <path id="sigPath" class="sig-path" d="M 10 30 Q 30 10 50 25 Q 70 38 90 20 Q 110 5 130 22 Q 150 38 170 18 Q 185 8 195 25"/>
+              </svg>
+              <div class="sig-line"></div>
+            </div>
+            <div class="submit-btn" id="wartBtn">Wartung abschließen ✓</div>
+          </div>
+        </div>
+
+        <!-- S6: SUCCESS -->
+        <div class="screen-layer" id="s6">
+          <div class="topbar"><div class="logo-text">Facility<span>Check</span></div></div>
+          <div class="success-area">
+            <div class="success-icon">
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M6 14l6 6 10-12" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="success-title">Wartung gespeichert ✓</div>
+            <div class="success-sub">Protokoll mit Unterschrift wurde<br>erfolgreich angelegt.</div>
+            <div class="success-btns">
+              <div class="btn-sec">Verlauf ansehen</div>
+              <div class="btn-pri">Nächstes Objekt →</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- S7: ADMIN DASHBOARD -->
+        <div class="screen-layer" id="s7">
+          <div class="topbar">
+            <div class="logo-text">Facility<span>Check</span></div>
+            <div class="user-pill"><div class="user-av" style="background:#059669;">AK</div><div class="user-name">Admin</div></div>
+          </div>
+          <div class="admin-nav">
+            <div class="admin-tab active">Dashboard</div>
+            <div class="admin-tab">Mängel</div>
+            <div class="admin-tab">Kalender</div>
+          </div>
+          <div class="dash-content">
+            <div style="font-size:11px;font-weight:700;color:#0F172A;margin-bottom:2px;">Guten Morgen 👋</div>
+            <div class="stat-row">
+              <div class="stat-card"><div class="stat-val" style="color:#0F172A;">13</div><div class="stat-lbl">Objekte</div></div>
+              <div class="stat-card"><div class="stat-val" style="color:#059669;">8</div><div class="stat-lbl">Gewartet ✓</div></div>
+              <div class="stat-card"><div class="stat-val" style="color:#D97706;">3</div><div class="stat-lbl">Bald fällig</div></div>
+              <div class="stat-card"><div class="stat-val" style="color:#DC2626;">2</div><div class="stat-lbl">Überfällig!</div></div>
+            </div>
+            <div class="building-card">
+              <div class="building-name">Dr. Bohrgasse 9</div>
+              <div class="obj-row"><div class="dot dot-g"></div><div class="obj-n">Brandschutztür 1</div><div class="obj-d">Jan 2026</div></div>
+              <div class="obj-row"><div class="dot dot-g"></div><div class="obj-n">Brandschutztür 2</div><div class="obj-d">Jan 2026</div></div>
+              <div class="obj-row"><div class="dot dot-r"></div><div class="obj-n">Lüftung A2</div><div class="obj-d">Okt 2025</div></div>
+            </div>
+            <div class="building-card">
+              <div class="building-name">Oskar-Morgenstern-Platz 1</div>
+              <div class="obj-row"><div class="dot dot-r"></div><div class="obj-n">Brandschutzklappe 1</div><div class="obj-d">Mär 2025</div></div>
+              <div class="obj-row"><div class="dot dot-g"></div><div class="obj-n">Verbundfenster 1</div><div class="obj-d">Jan 2026</div></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- phone-screen -->
+    </div><!-- phone -->
+  </div><!-- phone-wrap -->
+
+  <!-- Side info cards -->
+  <div class="side-info" id="sideInfo">
+    <div class="info-card" id="infoCard">
+      <div class="info-step" id="infoStep">Schritt 1 von 6</div>
+      <div class="info-text" id="infoText">Techniker wählt seinen Namen aus dem Dropdown und meldet sich an.</div>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<script>
+const STEPS = 7;
+let current = 0;
+let timer = null;
+let sigDrawn = false;
+
+// Build progress dots
+const pb = document.getElementById('progressBar');
+for(let i=0;i<STEPS;i++){
+  const d = document.createElement('div');
+  d.className = 'prog-dot' + (i===0?' active':'');
+  d.id = 'pd'+i;
+  d.onclick = () => goTo(i);
+  d.style.cursor = 'pointer';
+  pb.appendChild(d);
+}
+
+function updateProgress(i) {
+  for(let j=0;j<STEPS;j++){
+    const d = document.getElementById('pd'+j);
+    d.className = 'prog-dot' + (j===i?' active':'');
+  }
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen-layer').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function moveCursor(x, y, cb, delay=400) {
+  const cur = document.getElementById('cursor');
+  cur.style.left = x+'px';
+  cur.style.top = y+'px';
+  setTimeout(()=>{
+    cur.classList.add('clicking');
+    setTimeout(()=>{ cur.classList.remove('clicking'); if(cb) cb(); }, 200);
+  }, delay);
+}
+
+function flash(cb) {
+  const f = document.getElementById('flash');
+  f.classList.add('show');
+  setTimeout(()=>{ f.classList.remove('show'); if(cb) cb(); }, 150);
+}
+
+function setInfo(step, text) {
+  const card = document.getElementById('infoCard');
+  card.classList.remove('visible');
+  setTimeout(()=>{
+    document.getElementById('infoStep').textContent = step;
+    document.getElementById('infoText').textContent = text;
+    card.classList.add('visible');
+  }, 300);
+}
+
+const scenes = [
+  // 0: Login
+  () => {
+    showScreen('s1');
+    setInfo('Schritt 1 — Anmelden', 'Techniker wählt seinen Namen aus dem Dropdown und meldet sich an.');
+    moveCursor(140, 420, null, 800);
+  },
+  // 1: Tech Home
+  () => {
+    flash(()=>showScreen('s2'));
+    setInfo('Schritt 2 — Übersicht', 'Dragan sieht seine heutigen Aufgaben — 3 offene Wartungen auf einen Blick.');
+    moveCursor(140, 190, null, 600);
+  },
+  // 2: QR Scanner
+  () => {
+    setInfo('Schritt 3 — QR scannen', 'Großen blauen Button antippen → Kamera öffnet sich → Handy auf den QR-Code am Objekt halten.');
+    moveCursor(140, 190, ()=>{
+      flash(()=>showScreen('s3'));
+    }, 500);
+  },
+  // 3: Objekt Detail
+  () => {
+    flash(()=>showScreen('s4'));
+    setInfo('Schritt 4 — Objekt öffnet sich', 'Nach dem Scan öffnet sich sofort die richtige Seite — Name, Standort, Intervall, letzter Eintrag.');
+    moveCursor(140, 280, null, 600);
+  },
+  // 4: Wartung Form
+  () => {
+    setInfo('Schritt 5 — Wartung dokumentieren', 'Tab "Wartung" antippen → Notiz schreiben → Mit dem Finger unterschreiben → Abschließen.');
+    moveCursor(140, 230, ()=>{
+      showScreen('s5');
+      // Animate typing
+      setTimeout(()=>{
+        const n = document.getElementById('wartungNotiz');
+        n.style.color = '#1E293B';
+        n.textContent = 'Jahresinspektion OK ✓';
+      }, 600);
+      // Animate signature
+      setTimeout(()=>{
+        document.getElementById('sigHint').style.opacity='0';
+        document.getElementById('sigPath').classList.add('drawn');
+      }, 1200);
+    }, 500);
+  },
+  // 5: Success
+  () => {
+    setInfo('Schritt 6 — Gespeichert!', 'Grüne Bestätigung erscheint. Der Objektleiter sieht den Eintrag sofort in Echtzeit.');
+    setTimeout(()=>{
+      flash(()=>showScreen('s6'));
+    }, 800);
+    moveCursor(140, 400, null, 1200);
+  },
+  // 6: Admin Dashboard
+  () => {
+    flash(()=>showScreen('s7'));
+    setInfo('Admin-Dashboard', 'Der Objektleiter sieht alle drei Standorte mit Ampelstatus — sofort erkennen wo Handlungsbedarf besteht.');
+    moveCursor(140, 300, null, 600);
+  },
+];
+
+function goTo(i) {
+  if(timer) clearTimeout(timer);
+  current = i;
+  scenes[i]();
+  updateProgress(i);
+  scheduleNext();
+}
+
+function scheduleNext() {
+  if(timer) clearTimeout(timer);
+  timer = setTimeout(()=>{
+    current = (current+1) % STEPS;
+    goTo(current);
+  }, 4500);
+}
+
+// Start
+document.getElementById('infoCard').classList.add('visible');
+scenes[0]();
+scheduleNext();
+
+// Click phone to advance
+document.getElementById('phoneScreen').addEventListener('click', ()=>{ goTo((current+1)%STEPS); });
+</script>
+</body>
+</html>
