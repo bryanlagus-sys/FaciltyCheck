@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FacilityCheck — ISS Austria Präsentation</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+:root {
+  --navy:   #07111E;
+  --dark:   #0D1E31;
+  --card:   #111F30;
+  --card2:  #162840;
+  --border: #1E3A52;
+  --blue:   #1565C0;
+  --cyan:   #00C2E0;
+  --cyan2:  #00E5FF;
+  --green:  #00E096;
+  --red:    #FF4C4C;
+  --amber:  #FFB800;
+  --white:  #FFFFFF;
+  --muted:  #6B8CAE;
+  --light:  #C8DCEF;
+}
+
+html,body{width:100%;height:100%;overflow:hidden;background:var(--navy);font-family:'DM Sans',sans-serif;color:var(--white);}
+
+/* ── NOISE TEXTURE ── */
+body::before{content:'';position:fixed;inset:0;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;}
+
+/* ── SLIDE ENGINE ── */
+.deck{position:relative;width:100vw;height:100vh;}
+.slide{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .6s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;}
+.slide.active{opacity:1;pointer-events:auto;}
+
+/* ── NAV ── */
+.nav{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;gap:.5rem;z-index:100;align-items:center;}
+.ndot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:all .3s;}
+.ndot.on{background:var(--cyan);width:28px;border-radius:4px;}
+
+.nav-arrows{position:fixed;bottom:1.7rem;z-index:100;display:flex;gap:.5rem;}
+.nav-arrows.left{left:1.5rem;}
+.nav-arrows.right{right:1.5rem;}
+.arr-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.arr-btn:hover{background:var(--card2);color:var(--white);border-color:var(--cyan);}
+
+.slide-counter{position:fixed;top:1.4rem;right:1.5rem;font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);z-index:100;letter-spacing:.08em;}
+
+/* ── GRID BG ── */
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(0,194,224,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,194,224,.04) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;}
+
+/* ── GLOW ── */
+.glow{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;}
+.glow-cyan{background:radial-gradient(circle,rgba(0,194,224,.15),transparent 70%);}
+.glow-blue{background:radial-gradient(circle,rgba(21,101,192,.2),transparent 70%);}
+
+/* ════════════════════════════════════
+   SLIDE 1 — TITLE
+════════════════════════════════════ */
+#s1{background:var(--navy);}
+#s1 .grid-bg{opacity:.6;}
+#s1 .glow1{width:600px;height:600px;top:-150px;left:-100px;}
+#s1 .glow2{width:500px;height:500px;bottom:-100px;right:-80px;}
+
+.title-wrap{flex:1;display:flex;align-items:center;padding:0 6vw;gap:5vw;position:relative;z-index:2;}
+.title-left{flex:1;}
+.eyebrow{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--cyan);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1.2rem;opacity:0;animation:fadeUp .6s .2s forwards;}
+.big-title{font-family:'Syne',sans-serif;font-size:clamp(3rem,6vw,5.5rem);font-weight:800;line-height:.95;margin-bottom:1.5rem;opacity:0;animation:fadeUp .6s .4s forwards;}
+.big-title .blue{color:var(--cyan);}
+.tagline{font-size:1.05rem;color:var(--light);line-height:1.6;max-width:480px;margin-bottom:2.4rem;opacity:0;animation:fadeUp .6s .6s forwards;}
+
+.client-badge{display:inline-flex;align-items:center;gap:.75rem;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.7rem 1.2rem;opacity:0;animation:fadeUp .6s .8s forwards;}
+.client-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);}
+.client-label{font-size:.8rem;color:var(--muted);}
+.client-name{font-size:.95rem;font-weight:600;}
+
+.loc-pills{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.4rem;opacity:0;animation:fadeUp .6s 1s forwards;}
+.loc-pill{display:flex;align-items:center;gap:.4rem;background:rgba(0,194,224,.08);border:1px solid rgba(0,194,224,.2);border-radius:20px;padding:.3rem .85rem;font-size:.75rem;color:var(--cyan);}
+
+.title-right{width:320px;display:flex;align-items:center;justify-content:center;opacity:0;animation:fadeIn .8s .5s forwards;position:relative;}
+.phone-mock{width:200px;height:400px;background:var(--card);border-radius:28px;box-shadow:0 40px 80px rgba(0,0,0,.7),inset 0 0 0 1px rgba(255,255,255,.07);overflow:hidden;position:relative;}
+.pm-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:60px;height:16px;background:var(--card);border-radius:0 0 10px 10px;z-index:10;}
+.pm-screen{width:100%;height:100%;background:#F0F5FF;display:flex;flex-direction:column;}
+.pm-bar{background:#0D1E31;padding:22px 10px 7px;display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.pm-logo{font-size:10px;font-weight:700;color:#fff;font-family:'Syne',sans-serif;}
+.pm-logo span{color:var(--cyan);}
+.pm-content{flex:1;padding:8px;display:flex;flex-direction:column;gap:5px;}
+
+.scan-pulse{position:absolute;width:200px;height:200px;border-radius:50%;border:1px solid rgba(0,194,224,.3);top:50%;left:50%;transform:translate(-50%,-50%);animation:pulse 2s infinite;}
+.scan-pulse2{animation-delay:.8s;width:280px;height:280px;}
+.scan-pulse3{animation-delay:1.6s;width:360px;height:360px;}
+@keyframes pulse{0%{opacity:.6;transform:translate(-50%,-50%) scale(.8);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.2);}}
+
+/* ════════════════════════════════════
+   SLIDE 2 — PROBLEM
+════════════════════════════════════ */
+#s2{background:var(--navy);}
+.problem-layout{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;padding:1rem 4vw 2rem;position:relative;z-index:2;}
+.prob-col{display:flex;flex-direction:column;gap:.75rem;}
+.prob-header{font-size:.65rem;font-family:'DM Mono',monospace;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.3rem;}
+.prob-header.bad{color:var(--red);}
+.prob-header.good{color:var(--green);}
+.prob-card{background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+.prob-card.bad-card{border-color:rgba(255,76,76,.2);}
+.prob-card.good-card{border-color:rgba(0,224,150,.2);}
+.prob-card-header{padding:.7rem 1rem;display:flex;align-items:center;gap:.6rem;font-size:.85rem;font-weight:600;}
+.bad-card .prob-card-header{background:rgba(255,76,76,.1);color:var(--red);}
+.good-card .prob-card-header{background:rgba(0,224,150,.1);color:var(--green);}
+.prob-item{display:flex;align-items:flex-start;gap:.7rem;padding:.6rem 1rem;border-top:1px solid rgba(255,255,255,.04);}
+.prob-dot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.bad-dot{background:var(--red);}
+.good-dot{background:var(--green);box-shadow:0 0 6px rgba(0,224,150,.5);}
+.prob-text{font-size:.82rem;color:var(--light);line-height:1.4;}
+
+/* ════════════════════════════════════
+   SLIDE 3 — HOW IT WORKS
+════════════════════════════════════ */
+#s3{background:var(--navy);}
+.steps-row{flex:1;display:flex;align-items:center;padding:0 3vw 2rem;gap:0;position:relative;z-index:2;}
+.step-card{flex:1;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem 1.2rem;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;margin:0 .4rem;transition:transform .3s,border-color .3s,box-shadow .3s;}
+.step-card:hover{transform:translateY(-4px);border-color:var(--cyan);box-shadow:0 20px 40px rgba(0,0,0,.4);}
+.step-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--cyan);border-radius:16px 16px 0 0;opacity:0;transition:opacity .3s;}
+.step-card:hover::before{opacity:1;}
+.step-num{font-family:'Syne',sans-serif;font-size:2.5rem;font-weight:800;color:rgba(0,194,224,.15);line-height:1;margin-bottom:.75rem;}
+.step-icon{font-size:2rem;margin-bottom:.75rem;display:block;}
+.step-title{font-size:.88rem;font-weight:600;margin-bottom:.5rem;color:var(--white);}
+.step-desc{font-size:.75rem;color:var(--muted);line-height:1.5;}
+.step-connector{width:24px;color:rgba(0,194,224,.4);font-size:1.2rem;text-align:center;flex-shrink:0;margin-top:-2rem;}
+
+.highlight-bar{margin:0 4vw 1.5rem;padding:.65rem 1.2rem;background:rgba(0,194,224,.07);border:1px solid rgba(0,194,224,.2);border-radius:10px;font-size:.8rem;color:var(--cyan);text-align:center;position:relative;z-index:2;}
+
+/* ════════════════════════════════════
+   SLIDE 4 — LIVE DEMO PHONE
+════════════════════════════════════ */
+#s4{background:var(--navy);}
+.demo-layout{flex:1;display:flex;align-items:center;justify-content:center;gap:4vw;padding:0 4vw 2rem;position:relative;z-index:2;}
+
+.demo-phone-wrap{position:relative;flex-shrink:0;}
+.demo-phone{width:260px;height:520px;background:var(--card);border-radius:36px;padding:10px;box-shadow:0 40px 80px rgba(0,0,0,.7),inset 0 0 0 1px rgba(255,255,255,.07);}
+.dp-screen{width:100%;height:100%;background:#F0F5FF;border-radius:28px;overflow:hidden;position:relative;}
+.dp-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:70px;height:20px;background:var(--card);border-radius:0 0 12px 12px;z-index:20;}
+.dp-layer{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;transition:opacity .4s;pointer-events:none;}
+.dp-layer.on{opacity:1;pointer-events:auto;}
+
+.dp-topbar{background:#0D1E31;padding:26px 12px 8px;display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.dp-logo{font-size:12px;font-weight:700;color:#fff;font-family:'Syne',sans-serif;}
+.dp-logo span{color:var(--cyan);}
+.dp-av{width:22px;height:22px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;margin-left:auto;}
+.dp-uname{font-size:8px;color:#fff;}
+
+/* screen components */
+.dp-field-label{font-size:7px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.3px;}
+.dp-field{width:100%;padding:6px 8px;border:1px solid #E2E8F0;border-radius:7px;font-size:9px;color:#1E293B;background:#fff;margin-bottom:6px;}
+.dp-btn{width:100%;padding:9px;background:var(--blue);border:none;border-radius:8px;font-size:10px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;gap:5px;}
+.dp-btn.green{background:#059669;}
+.dp-tab-row{display:flex;background:#F1F5F9;margin:6px;border-radius:8px;padding:3px;flex-shrink:0;}
+.dp-tab{flex:1;padding:5px 2px;font-size:8px;text-align:center;border-radius:6px;color:#64748B;font-weight:500;}
+.dp-tab.on{background:#fff;color:#0F172A;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.1);}
+.dp-obj-header{padding:10px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #E2E8F0;background:#fff;flex-shrink:0;}
+.dp-badge{font-size:7px;font-weight:700;padding:2px 6px;border-radius:8px;margin-left:auto;}
+.dp-badge-red{background:#FEE2E2;color:#DC2626;}
+.dp-badge-green{background:#D1FAE5;color:#065F46;}
+
+/* QR scanner layer */
+.qr-dark{flex:1;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;}
+.qr-frame{width:130px;height:130px;position:relative;background:rgba(26,37,55,.8);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.qr-corner{position:absolute;width:18px;height:18px;border-color:#fff;border-style:solid;}
+.qr-corner.tl{top:0;left:0;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
+.qr-corner.tr{top:0;right:0;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
+.qr-corner.bl{bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
+.qr-corner.br{bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
+.qr-scanline{position:absolute;left:8px;right:8px;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),#fff,var(--cyan),transparent);box-shadow:0 0 8px rgba(0,194,224,.9);animation:scanline 2s ease-in-out infinite;}
+@keyframes scanline{0%,100%{top:10px;opacity:.5}50%{top:110px;opacity:1}}
+
+/* success layer */
+.dp-success{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px;}
+.dp-succ-ico{width:56px;height:56px;border-radius:50%;background:#D1FAE5;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.dp-succ-title{font-size:14px;font-weight:700;color:#0F172A;}
+.dp-succ-sub{font-size:9px;color:#64748B;text-align:center;line-height:1.5;}
+
+/* sig */
+.sig-area{border:1px solid #E2E8F0;border-radius:7px;background:#F8FAFC;height:50px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.sig-hint{font-size:8px;color:#CBD5E1;}
+.sig-path{stroke:var(--blue);stroke-width:2;fill:none;stroke-linecap:round;stroke-dasharray:200;stroke-dashoffset:200;transition:stroke-dashoffset 1.5s ease;}
+.sig-path.drawn{stroke-dashoffset:0;}
+
+/* cursor */
+.dp-cursor{position:absolute;width:18px;height:18px;border-radius:50%;background:rgba(21,101,192,.85);pointer-events:none;transition:all .5s cubic-bezier(.25,.46,.45,.94);z-index:100;box-shadow:0 0 0 4px rgba(21,101,192,.25);transform:translate(-50%,-50%);}
+.dp-cursor.click{transform:translate(-50%,-50%) scale(.65);}
+.dp-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .15s;z-index:50;border-radius:28px;}
+
+/* demo info panel */
+.demo-info{width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:1rem;}
+.demo-step-label{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;}
+.demo-info-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.4rem;}
+.demo-info-step{font-size:.7rem;font-weight:700;color:var(--cyan);margin-bottom:.4rem;}
+.demo-info-title{font-size:1.1rem;font-weight:700;color:var(--white);line-height:1.3;margin-bottom:.6rem;}
+.demo-info-body{font-size:.8rem;color:var(--muted);line-height:1.6;}
+.demo-info-tag{display:inline-block;background:rgba(0,194,224,.12);color:var(--cyan);font-size:.65rem;font-weight:700;padding:.2rem .65rem;border-radius:20px;margin-top:.7rem;letter-spacing:.05em;}
+.demo-info-tag.green{background:rgba(0,224,150,.1);color:var(--green);}
+.demo-info-tag.amber{background:rgba(255,184,0,.1);color:var(--amber);}
+.demo-dots{display:flex;gap:.4rem;}
+.demo-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.15);cursor:pointer;transition:all .3s;}
+.demo-dot.on{background:var(--cyan);width:22px;border-radius:4px;}
+.demo-hint{font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:.4rem;}
+.demo-hint::before{content:'';width:18px;height:1px;background:var(--border);}
+
+/* ════════════════════════════════════
+   SLIDE 5 — FEATURES GRID
+════════════════════════════════════ */
+#s5{background:var(--navy);}
+.feat-grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:1rem;padding:1rem 4vw 2rem;position:relative;z-index:2;}
+.feat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.3rem;display:flex;flex-direction:column;gap:.65rem;transition:all .3s;cursor:default;position:relative;overflow:hidden;}
+.feat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--blue));transform:scaleX(0);transform-origin:left;transition:transform .4s;}
+.feat-card:hover{border-color:rgba(0,194,224,.3);transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4);}
+.feat-card:hover::after{transform:scaleX(1);}
+.feat-icon-row{display:flex;align-items:center;gap:.7rem;}
+.feat-icon-wrap{width:38px;height:38px;border-radius:10px;background:rgba(0,194,224,.1);border:1px solid rgba(0,194,224,.2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.feat-title{font-size:.92rem;font-weight:600;}
+.feat-desc{font-size:.78rem;color:var(--muted);line-height:1.5;}
+.feat-tag{display:inline-block;font-size:.63rem;font-family:'DM Mono',monospace;color:var(--cyan);background:rgba(0,194,224,.08);padding:.15rem .55rem;border-radius:4px;margin-top:auto;}
+
+/* ════════════════════════════════════
+   SLIDE 6 — QR SYSTEM DEMO
+════════════════════════════════════ */
+#s6{background:var(--navy);}
+
+/* ════════════════════════════════════
+   SLIDE 7 — TIMELINE
+════════════════════════════════════ */
+#s7{background:var(--navy);}
+.timeline-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 5vw 2.5rem;position:relative;z-index:2;}
+.tl-line{position:relative;height:3px;background:var(--border);border-radius:3px;margin:2rem 0 2.5rem;}
+.tl-progress{position:absolute;left:0;top:0;height:100%;background:linear-gradient(90deg,var(--cyan),var(--blue));border-radius:3px;width:0;transition:width 1.5s ease;}
+.tl-phases{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;}
+.tl-phase{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem;display:flex;flex-direction:column;gap:.5rem;position:relative;}
+.tl-phase::before{content:'';position:absolute;top:-2.55rem;left:50%;transform:translateX(-50%);width:14px;height:14px;border-radius:50%;border:2px solid var(--border);}
+.tl-dot-line{position:absolute;top:-1.85rem;left:50%;transform:translateX(-50%);width:2px;height:20px;background:var(--border);}
+.tl-phase.ph1::before{border-color:var(--cyan);background:var(--cyan);}
+.tl-phase.ph2::before{border-color:var(--blue);background:var(--blue);}
+.tl-phase.ph3::before{border-color:var(--amber);background:var(--amber);}
+.tl-phase.ph4::before{border-color:var(--green);background:var(--green);}
+.tl-weeks{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;margin-bottom:.15rem;}
+.ph1 .tl-weeks{color:var(--cyan);}
+.ph2 .tl-weeks{color:var(--blue);}
+.ph3 .tl-weeks{color:var(--amber);}
+.ph4 .tl-weeks{color:var(--green);}
+.tl-label{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;}
+.tl-items{display:flex;flex-direction:column;gap:.3rem;margin-top:.3rem;}
+.tl-item{display:flex;align-items:flex-start;gap:.5rem;font-size:.75rem;color:var(--muted);}
+.tl-item::before{content:'›';color:var(--cyan);font-weight:700;line-height:1.4;flex-shrink:0;}
+
+.tl-stat{position:absolute;right:5vw;top:50%;transform:translateY(-50%);text-align:center;}
+.tl-stat-num{font-family:'Syne',sans-serif;font-size:4rem;font-weight:800;color:var(--cyan);line-height:1;}
+.tl-stat-label{font-size:.75rem;color:var(--muted);margin-top:.25rem;}
+
+/* ════════════════════════════════════
+   SLIDE 8 — CLOSING
+════════════════════════════════════ */
+#s8{background:var(--navy);align-items:center;justify-content:center;}
+.closing-inner{text-align:center;position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:1.5rem;}
+.closing-big{font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,4rem);font-weight:800;line-height:1.05;}
+.closing-sub{font-size:1rem;color:var(--muted);max-width:520px;line-height:1.6;}
+.closing-cta{display:inline-flex;align-items:center;gap:.7rem;background:var(--blue);border-radius:12px;padding:.85rem 1.8rem;font-size:.95rem;font-weight:600;color:#fff;box-shadow:0 0 40px rgba(21,101,192,.4);}
+.closing-cta .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.closing-contact{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.08em;}
+
+/* ── SHARED: Slide Header ── */
+.slide-header{padding:1.5rem 4vw .5rem;position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;}
+.slide-eyebrow{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--cyan);letter-spacing:.18em;text-transform:uppercase;}
+.slide-title{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;line-height:1.1;}
+.slide-title-wrap{display:flex;flex-direction:column;gap:.25rem;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+/* Stagger children of active slide */
+.slide.active .stagger > *{animation:fadeUp .5s both;}
+.slide.active .stagger > *:nth-child(1){animation-delay:.1s;}
+.slide.active .stagger > *:nth-child(2){animation-delay:.2s;}
+.slide.active .stagger > *:nth-child(3){animation-delay:.3s;}
+.slide.active .stagger > *:nth-child(4){animation-delay:.4s;}
+.slide.active .stagger > *:nth-child(5){animation-delay:.5s;}
+.slide.active .stagger > *:nth-child(6){animation-delay:.6s;}
+
+/* Bottom bar */
+.slide-bottom{position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--cyan) 0%,var(--blue) 50%,transparent 100%);opacity:.4;}
+
+/* QR mini for phone screen */
+.qr-mini-svg{opacity:.18;}
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- ═══════════════════════════════════ SLIDE 1 ═══ -->
+  <div class="slide active" id="s1">
+    <div class="grid-bg"></div>
+    <div class="glow glow-cyan glow1" style="width:600px;height:600px;top:-150px;left:-100px;position:absolute;"></div>
+    <div class="glow glow-blue glow2" style="width:500px;height:500px;bottom:-100px;right:-80px;position:absolute;"></div>
+
+    <div class="title-wrap">
+      <div class="title-left">
+        <div class="eyebrow">Digitales Wartungsmanagement · ISS Austria</div>
+        <h1 class="big-title">Facility<span class="blue">Check</span></h1>
+        <p class="tagline">Drei Standorte. Ein System.<br>Volle Kontrolle — in Echtzeit.</p>
+        <div class="client-badge">
+          <div class="client-dot"></div>
+          <div>
+            <div class="client-label">Präsentiert für</div>
+            <div class="client-name">ISS Austria — Wien</div>
+          </div>
+        </div>
+        <div class="loc-pills">
+          <div class="loc-pill">📍 Dr. Bohrgasse 9</div>
+          <div class="loc-pill">📍 Rennweg 95b</div>
+          <div class="loc-pill">📍 Oskar-Morgenstern-Platz 1</div>
+        </div>
+      </div>
+      <div class="title-right">
+        <div class="scan-pulse"></div>
+        <div class="scan-pulse scan-pulse2"></div>
+        <div class="scan-pulse scan-pulse3"></div>
+        <div class="phone-mock">
+          <div class="pm-notch"></div>
+          <div class="pm-screen">
+            <div class="pm-bar">
+              <div class="pm-logo">Facility<span>Check</span></div>
+              <div style="margin-left:auto;width:18px;height:18px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:6px;color:#fff;font-weight:700;">D</div>
+            </div>
+            <div class="pm-content">
+              <!-- mock dashboard -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+                <div style="background:#fff;border:1px solid #E2E8F0;border-radius:7px;padding:6px;">
+                  <div style="font-size:14px;font-weight:700;color:#0F172A;">12</div>
+                  <div style="font-size:6px;color:#64748B;">Objekte heute</div>
+                </div>
+                <div style="background:#fff;border:1px solid #E2E8F0;border-radius:7px;padding:6px;">
+                  <div style="font-size:14px;font-weight:700;color:#DC2626;">3</div>
+                  <div style="font-size:6px;color:#64748B;">Mängel offen</div>
+                </div>
+              </div>
+              <div style="background:#fff;border:1px solid #E2E8F0;border-radius:7px;overflow:hidden;">
+                <div style="background:#0D1E31;padding:4px 7px;font-size:7px;color:#fff;font-weight:600;">Oskar-Morgenstern-Platz 1</div>
+                <div style="padding:4px 7px;display:flex;align-items:center;gap:5px;border-bottom:1px solid #F1F5F9;">
+                  <div style="width:6px;height:6px;border-radius:50%;background:#059669;flex-shrink:0;"></div>
+                  <div style="font-size:7px;flex:1;color:#1E293B;">Brandschutzklappe 1</div>
+                  <div style="font-size:6px;color:#94A3B8;">heute</div>
+                </div>
+                <div style="padding:4px 7px;display:flex;align-items:center;gap:5px;border-bottom:1px solid #F1F5F9;">
+                  <div style="width:6px;height:6px;border-radius:50%;background:#D97706;flex-shrink:0;"></div>
+                  <div style="font-size:7px;flex:1;color:#1E293B;">Verbundfenster 1</div>
+                  <div style="font-size:6px;color:#D97706;">überfällig</div>
+                </div>
+                <div style="padding:4px 7px;display:flex;align-items:center;gap:5px;">
+                  <div style="width:6px;height:6px;border-radius:50%;background:#DC2626;box-shadow:0 0 4px rgba(220,38,38,.5);flex-shrink:0;"></div>
+                  <div style="font-size:7px;flex:1;color:#1E293B;">Rückkühler</div>
+                  <div style="font-size:6px;color:#DC2626;">Mangel!</div>
+                </div>
+              </div>
+              <div style="background:#1A56DB;border-radius:7px;padding:8px;text-align:center;font-size:9px;font-weight:700;color:#fff;">📷 QR-Code scannen</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-bottom"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════ SLIDE 2 ═══ -->
+  <div class="slide" id="s2">
+    <div class="grid-bg"></div>
+    <div class="glow glow-blue" style="width:400px;height:400px;top:-100px;right:-50px;position:absolute;opacity:.5;"></div>
+    <div class="slide-header">
+      <div class="slide-title-wrap">
+        <div class="slide-eyebrow">Die Herausforderung</div>
+        <h2 class="slide-title">Heute vs. mit FacilityCheck</h2>
+      </div>
+    </div>
+    <div class="problem-layout stagger">
+      <div class="prob-col">
+        <div class="prob-header bad">✕ Heute — ohne FacilityCheck</div>
+        <div class="prob-card bad-card">
+          <div class="prob-card-header">🚨 Tägliche Realität</div>
+          <div class="prob-item"><div class="prob-dot bad-dot"></div><div class="prob-text">Papierprotokolle & Excel-Listen je Standort — nicht durchsuchbar, kaum archivierbar</div></div>
+          <div class="prob-item"><div class="prob-dot bad-dot"></div><div class="prob-text">Kein zentraler Überblick über alle drei Standorte gleichzeitig</div></div>
+          <div class="prob-item"><div class="prob-dot bad-dot"></div><div class="prob-text">Mängelmeldungen per Telefon oder Zettel — gehen verloren, keine Fotos</div></div>
+          <div class="prob-item"><div class="prob-dot bad-dot"></div><div class="prob-text">Wartungsnachweise schwer auffindbar bei Behördenchecks</div></div>
+          <div class="prob-item"><div class="prob-dot bad-dot"></div><div class="prob-text">Personalwechsel = Wissensverlust über Objektzustand</div></div>
+        </div>
+      </div>
+      <div class="prob-col">
+        <div class="prob-header good">✓ Mit FacilityCheck</div>
+        <div class="prob-card good-card">
+          <div class="prob-card-header">✅ Was sich sofort ändert</div>
+          <div class="prob-item"><div class="prob-dot good-dot"></div><div class="prob-text">Alle drei Standorte in einer zentralen App — ein Login, alles sichtbar</div></div>
+          <div class="prob-item"><div class="prob-dot good-dot"></div><div class="prob-text">Echtzeit-Überblick für den Objektleiter: Ampelstatus per Dashboard</div></div>
+          <div class="prob-item"><div class="prob-dot good-dot"></div><div class="prob-text">Mängel mit Foto direkt am Handy melden — in unter 60 Sekunden</div></div>
+          <div class="prob-item"><div class="prob-dot good-dot"></div><div class="prob-text">Wartungsberichte auf Knopfdruck als PDF — ÖNORM-konform</div></div>
+          <div class="prob-item"><div class="prob-dot good-dot"></div><div class="prob-text">Lückenlose digitale Dokumentation mit Datum, Techniker & Unterschrift</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-bottom"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════ SLIDE 3 ═══ -->
+  <div class="slide" id="s3">
+    <div class="grid-bg"></div>
+    <div class="slide-header">
+      <div class="slide-title-wrap">
+        <div class="slide-eyebrow">So funktioniert es</div>
+        <h2 class="slide-title">Ein Scan. Alles dokumentiert.</h2>
+      </div>
+    </div>
+    <div class="steps-row stagger">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <span class="step-icon">📱</span>
+        <div class="step-title">QR-Code scannen</div>
+        <div class="step-desc">Handy an das Etikett am Objekt halten — Browser öffnet sich sofort</div>
+      </div>
+      <div class="step-connector">›</div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <span class="step-icon">🏷️</span>
+        <div class="step-title">Objekt öffnet sich</div>
+        <div class="step-desc">Name, Standort, letzter Eintrag und Status — sofort sichtbar</div>
+      </div>
+      <div class="step-connector">›</div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <span class="step-icon">✍️</span>
+        <div class="step-title">Wartung abschließen</div>
+        <div class="step-desc">Datum automatisch, Notiz schreiben, digital am Touchscreen unterschreiben</div>
+      </div>
+      <div class="step-connector">›</div>
+      <div class="step-card">
+        <div class="step-num">04</div>
+        <span class="step-icon">📸</span>
+        <div class="step-title">Mangel melden</div>
+        <div class="step-desc">Foto aus der Kamera, Freitext, Schweregrad — in Sekunden erledigt</div>
+      </div>
+      <div class="step-connector">›</div>
+      <div class="step-card">
+        <div class="step-num">05</div>
+        <span class="step-icon">⚡</span>
+        <div class="step-title">Sofort sichtbar</div>
+        <div class="step-desc">Objektleiter sieht den Eintrag in Echtzeit — kein Warten, kein Anruf</div>
+      </div>
+    </div>
+    <div class="highlight-bar">⚡ Kein App-Install nötig — funktioniert mit jedem Smartphone-Browser · Unter 60 Sekunden von Scan bis Dokumentation</div>
+    <div class="slide-bottom"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════ SLIDE 4 — LIVE DEMO ═══ -->
+  <div class="slide" id="s4">
+    <div class="grid-bg"></div>
+    <div class="glow glow-cyan" style="width:400px;height:400px;top:0;left:-100px;position:absolute;opacity:.4;"></div>
+    <div class="slide-header">
+      <div class="slide-title-wrap">
+        <div class="slide-eyebrow">Live-Demo — Techniker-Workflow</div>
+        <h2 class="slide-title">So erlebt es der Techniker</h2>
+      </div>
+    </div>
+    <div class="demo-layout">
+      <!-- PHONE -->
+      <div class="demo-phone-wrap">
+        <div class="demo-phone">
+          <div class="dp-screen" id="dpScreen">
+            <div class="dp-notch"></div>
+            <div class="dp-flash" id="dpFlash"></div>
+            <div class="dp-cursor" id="dpCursor" style="left:50%;top:50%;"></div>
+
+            <!-- Layer 0: Login -->
+            <div class="dp-layer on" id="dl0">
+              <div class="dp-topbar"><div class="dp-logo">Facility<span>Check</span></div></div>
+              <div style="flex:1;background:linear-gradient(135deg,#0D1E31,#162844);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;gap:10px;">
+                <div style="font-size:16px;font-weight:700;color:#fff;font-family:'Syne',sans-serif;">Willkommen</div>
+                <div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:4px;">Techniker auswählen</div>
+                <div style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px;">
+                  <div class="dp-field-label" style="color:rgba(255,255,255,.4);">Name</div>
+                  <div class="dp-field" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);color:#fff;" id="loginName">Dragan M.</div>
+                  <div class="dp-btn" style="margin-top:6px;">Anmelden →</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Layer 1: Dashboard -->
+            <div class="dp-layer" id="dl1">
+              <div class="dp-topbar">
+                <div class="dp-logo">Facility<span>Check</span></div>
+                <div class="dp-av">D</div>
+                <div class="dp-uname" style="margin-left:4px;">Dragan</div>
+              </div>
+              <div style="flex:1;padding:7px;display:flex;flex-direction:column;gap:5px;background:#F0F5FF;">
+                <div style="font-size:9px;font-weight:700;color:#0F172A;">Heute — 3 Aufgaben</div>
+                <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">
+                  <div style="background:#0D1E31;padding:5px 9px;font-size:8px;font-weight:700;color:#fff;">Dr. Bohrgasse 9</div>
+                  <div style="padding:6px 9px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #F1F5F9;">
+                    <div style="width:7px;height:7px;border-radius:50%;background:#D97706;flex-shrink:0;"></div>
+                    <div style="font-size:8px;flex:1;color:#0F172A;font-weight:600;">Brandschutztür 1</div>
+                    <div style="font-size:7px;color:#D97706;font-weight:600;">fällig</div>
+                  </div>
+                  <div style="padding:6px 9px;display:flex;align-items:center;gap:6px;">
+                    <div style="width:7px;height:7px;border-radius:50%;background:#D97706;flex-shrink:0;"></div>
+                    <div style="font-size:8px;flex:1;color:#0F172A;font-weight:600;">Lüftung A1</div>
+                    <div style="font-size:7px;color:#D97706;font-weight:600;">fällig</div>
+                  </div>
+                </div>
+                <div style="background:#1A56DB;border-radius:9px;padding:10px;display:flex;align-items:center;justify-content:center;gap:6px;">
+                  <span style="font-size:16px;">📷</span>
+                  <span style="font-size:10px;font-weight:700;color:#fff;">QR-Code scannen</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Layer 2: QR Scanner -->
+            <div class="dp-layer" id="dl2">
+              <div class="dp-topbar"><div class="dp-logo">Facility<span>Check</span></div><div class="dp-av">D</div></div>
+              <div class="qr-dark">
+                <div style="font-size:9px;color:rgba(255,255,255,.5);">Kamera auf QR-Code richten</div>
+                <div class="qr-frame">
+                  <div class="qr-corner tl"></div><div class="qr-corner tr"></div>
+                  <div class="qr-corner bl"></div><div class="qr-corner br"></div>
+                  <div class="qr-scanline"></div>
+                  <svg width="70" height="70" viewBox="0 0 70 70" class="qr-mini-svg">
+                    <rect x="5" y="5" width="25" height="25" fill="none" stroke="#fff" stroke-width="2"/>
+                    <rect x="10" y="10" width="15" height="15" fill="#fff"/>
+                    <rect x="40" y="5" width="25" height="25" fill="none" stroke="#fff" stroke-width="2"/>
+                    <rect x="45" y="10" width="15" height="15" fill="#fff"/>
+                    <rect x="5" y="40" width="25" height="25" fill="none" stroke="#fff" stroke-width="2"/>
+                    <rect x="10" y="45" width="15" height="15" fill="#fff"/>
+                    <rect x="40" y="40" width="5" height="5" fill="#fff"/><rect x="48" y="40" width="5" height="5" fill="#fff"/>
+                    <rect x="56" y="40" width="5" height="5" fill="#fff"/><rect x="40" y="48" width="5" height="5" fill="#fff"/>
+                    <rect x="48" y="48" width="5" height="5" fill="#fff"/><rect x="56" y="56" width="5" height="5" fill="#fff"/>
+                  </svg>
+                </div>
+                <div style="font-size:9px;color:rgba(255,255,255,.4);">Brandschutztür 1 · Dr. Bohrgasse 9</div>
+              </div>
+            </div>
+
+            <!-- Layer 3: Object Detail -->
+            <div class="dp-layer" id="dl3">
+              <div class="dp-topbar"><div class="dp-logo">Facility<span>Check</span></div><div class="dp-av">D</div></div>
+              <div class="dp-obj-header">
+                <div class="dp-obj-ico" style="font-size:18px;margin-right:4px;">🚪</div>
+                <div>
+                  <div style="font-size:11px;font-weight:700;color:#0F172A;">Brandschutztür 1</div>
+                  <div style="font-size:7px;color:#64748B;">Dr. Bohrgasse 9 / EG · Halbjährlich</div>
+                </div>
+                <div class="dp-badge dp-badge-red">fällig</div>
+              </div>
+              <div class="dp-tab-row">
+                <div class="dp-tab on">Übersicht</div>
+                <div class="dp-tab">Wartung</div>
+                <div class="dp-tab">Mängel</div>
+                <div class="dp-tab">Verlauf</div>
+              </div>
+              <div style="padding:7px 10px;flex:1;display:flex;flex-direction:column;gap:5px;background:#F8FAFC;">
+                <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:8px;">
+                  <div style="font-size:7px;color:#64748B;margin-bottom:4px;text-transform:uppercase;font-weight:600;">Letzter Eintrag</div>
+                  <div style="font-size:9px;color:#0F172A;font-weight:600;">Dragan M. · 12.09.2025</div>
+                  <div style="font-size:8px;color:#64748B;margin-top:2px;">Jahresinspektion OK ✓</div>
+                </div>
+                <div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:8px;display:flex;align-items:center;gap:6px;">
+                  <span style="font-size:14px;">⚠️</span>
+                  <div style="font-size:8px;color:#78350F;font-weight:600;">Wartung fällig seit 8 Tagen</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Layer 4: Wartung Form -->
+            <div class="dp-layer" id="dl4">
+              <div class="dp-topbar"><div class="dp-logo">Facility<span>Check</span></div><div class="dp-av">D</div></div>
+              <div class="dp-tab-row">
+                <div class="dp-tab">Übersicht</div>
+                <div class="dp-tab on">Wartung</div>
+                <div class="dp-tab">Mängel</div>
+                <div class="dp-tab">Verlauf</div>
+              </div>
+              <div style="padding:8px 10px;flex:1;display:flex;flex-direction:column;gap:6px;background:#F8FAFC;">
+                <div class="dp-field-label">Datum</div>
+                <div class="dp-field">26.03.2026 · automatisch</div>
+                <div class="dp-field-label">Techniker</div>
+                <div class="dp-field" style="font-weight:600;">Dragan M.</div>
+                <div class="dp-field-label">Notiz</div>
+                <div class="dp-field" id="wartNotiz" style="min-height:32px;">Jahresinspektion OK ✓</div>
+                <div class="dp-field-label">Unterschrift</div>
+                <div class="sig-area">
+                  <div class="sig-hint" id="sigHint" style="display:none;">Hier unterschreiben</div>
+                  <svg width="100%" height="44" style="position:absolute;"><path id="sigPath" class="sig-path drawn" d="M 20,30 C 30,10 40,35 55,22 C 65,12 70,28 85,20 C 95,14 100,26 115,18"/></svg>
+                </div>
+                <div class="dp-btn">Wartung abschließen ✓</div>
+              </div>
+            </div>
+
+            <!-- Layer 5: Success -->
+            <div class="dp-layer" id="dl5">
+              <div class="dp-topbar"><div class="dp-logo">Facility<span>Check</span></div><div class="dp-av">D</div></div>
+              <div class="dp-success">
+                <div class="dp-succ-ico">✅</div>
+                <div class="dp-succ-title">Wartung gespeichert!</div>
+                <div class="dp-succ-sub">Brandschutztür 1 · Dr. Bohrgasse 9<br>Dragan M. · 26.03.2026</div>
+                <div style="display:flex;gap:6px;width:100%;">
+                  <div style="flex:1;padding:8px;border:1px solid #E2E8F0;border-radius:8px;font-size:9px;text-align:center;color:#475569;">Mangel melden</div>
+                  <div class="dp-btn" style="flex:1;padding:8px;font-size:9px;">Weiter →</div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- dp-screen -->
+        </div>
+      </div>
+
+      <!-- INFO PANEL -->
+      <div class="demo-info">
+        <div class="demo-step-label" id="demoStepLabel">Schritt 1 von 6</div>
+        <div class="demo-info-card">
+          <div class="demo-info-step" id="demoStep">Schritt 1</div>
+          <div class="demo-info-title" id="demoTitle">Anmelden</div>
+          <div class="demo-info-body" id="demoBody">Techniker wählt seinen Namen aus dem Dropdown — kein Passwort, kein Stress. Magic Link oder gespeicherte Session.</div>
+          <div class="demo-info-tag" id="demoTag">Techniker-App</div>
+        </div>
+        <div class="demo-dots" id="demoDots"></div>
+        <div class="demo-hint">Auf das Telefon tippen zum Weiterschalten</div>
+      </div>
+    </div>
+    <div class="slide-bottom"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════ SLIDE 5 — FEATURES ═══ -->
+  <div class="slide" id="s5">
+    <div class="grid-bg"></div>
+    <div class="slide-header">
+      <div class="slide-title-wrap">
+        <div class="slide-eyebrow">Funktionen</div>
+        <h2 class="slide-title">Alles was der Objektleiter braucht.</h2>
+      </div>
+    </div>
+    <div class="feat-grid stagger">
+      <div class="feat-card">
+        <div class="feat-icon-row">
+          <div class="feat-icon-wrap">🚦</div>
+          <div class="feat-title">Ampel-Dashboard</div>
+        </div>
+        <div class="feat-desc">Sofort erkennen: welche Objekte gewartet sind, bald fällig oder überfällig — farblich klar markiert für alle drei Standorte.</div>
+        <div class="feat-tag">ECHTZEIT</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-row">
+          <div class="feat-icon-wrap">🏢</div>
+          <div class="feat-title">3 Standorte zentral</div>
+        </div>
+        <div class="feat-desc">Dr. Bohrgasse 9, Rennweg 95b und Oskar-Morgenstern-Platz 1 — alle Objekte und 9 Techniker in einer einzigen Ansicht.</div>
+        <div class="feat-tag">9 TECHNIKER</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-row">
+          <div class="feat-icon-wrap">⚠️</div>
+          <div class="feat-title">Mängelmanagement</div>
+        </div>
+        <div class="feat-desc">Jeder Mangel mit Foto, Schweregrad (Gering / Mittel / Kritisch) und Status-Tracking: Offen → In Bearbeitung → Erledigt.</div>
+        <div class="feat-tag">MIT FOTO</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-row">
+          <div class="feat-icon-wrap">📄</div>
+          <div class="feat-title">PDF-Export</div>
+        </div>
+        <div class="feat-desc">Wartungsberichte wöchentlich oder monatlich auf Knopfdruck — lückenlose Dokumentation für Behörden, ÖNORM-konform.</div>
+        <div class="feat-tag">ÖNORM</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-row">
+          <div class="feat-icon-wrap">🔔</div>
+          <div class="feat-title">Auto-Benachrichtigung</div>
+        </div>
+        <div class="feat-desc">E-Mail-Alarm bei kritischen Mängeln — kein manuelles Nachfragen mehr. Objektleiter weiß es, bevor das Telefon klingelt.</div>
+        <div class="feat-tag">E-MAIL ALARM</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-row">
+          <div class="feat-icon-wrap">🛡️</div>
+          <div class="feat-title">Rechtliche Absicherung</div>
+        </div>
+        <div class="feat-desc">Brandschutzklappe, BMA, Lüftungsanlage — gesetzliche Prüfpflichten (ÖNORM, Wiener Bauordnung) mit Datum, Techniker & Unterschrift.</div>
+        <div class="feat-tag">DSGVO · EU-SERVER</div>
+      </div>
+    </div>
+    <div class="slide-bottom"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════ SLIDE 6 — QR SYSTEM ═══ -->
+  <div class="slide" id="s6">
+    <div class="grid-bg"></div>
+    <div class="glow glow-cyan" style="width:350px;height:350px;top:-80px;right:-50px;position:absolute;opacity:.3;"></div>
+    <div class="slide-header">
+      <div class="slide-title-wrap">
+        <div class="slide-eyebrow">QR-Code System</div>
+        <h2 class="slide-title">Physisch. Digital. Unverlierbar.</h2>
+      </div>
+    </div>
+    <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;padding:1rem 4vw 2rem;position:relative;z-index:2;">
+      <!-- Left: Steps -->
+      <div style="display:flex;flex-direction:column;gap:.75rem;">
+        <div style="font-size:.7rem;font-family:'DM Mono',monospace;color:var(--cyan);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.25rem;">Von der Anlage bis zum Scan</div>
+        <div id="qrSteps" class="stagger" style="display:flex;flex-direction:column;gap:.6rem;">
+          <div style="display:flex;align-items:center;gap:1rem;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.8rem 1.1rem;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;flex-shrink:0;">①</div>
+            <div><div style="font-size:.88rem;font-weight:600;">Objekt anlegen</div><div style="font-size:.75rem;color:var(--muted);">UUID wird automatisch generiert</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.8rem 1.1rem;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;flex-shrink:0;">②</div>
+            <div><div style="font-size:.88rem;font-weight:600;">QR-Code erzeugen</div><div style="font-size:.75rem;color:var(--muted);">Druckfertiges PDF-Etikett — 1 Klick</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.8rem 1.1rem;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;flex-shrink:0;">③</div>
+            <div><div style="font-size:.88rem;font-weight:600;">Brady-Drucker druckt</div><div style="font-size:.75rem;color:var(--muted);">Polyester B-480 · wasser- & UV-fest · 8–10 Jahre</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;background:var(--card);border:1px solid rgba(255,184,0,.3);border-radius:12px;padding:.8rem 1.1rem;">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,184,0,.2);border:1px solid var(--amber);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;flex-shrink:0;color:var(--amber);">④</div>
+            <div><div style="font-size:.88rem;font-weight:600;">VOID-Sicherheitsetikett</div><div style="font-size:.75rem;color:var(--muted);">Manipulationsschutz — einzigartig am Markt</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;background:var(--card);border:1px solid rgba(0,224,150,.2);border-radius:12px;padding:.8rem 1.1rem;">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(0,224,150,.15);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;flex-shrink:0;color:var(--green);">⑤</div>
+            <div><div style="font-size:.88rem;font-weight:600;">Techniker scannt</div><div style="font-size:.75rem;color:var(--muted);">App öffnet sofort dieses Objekt — kein Login-Stress</div></div>
+          </div>
+        </div>
+      </div>
+      <!-- Right: Key fact + VOID callout -->
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div style="background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.3);border-radius:14px;padding:1.3rem;">
+          <div style="font-size:.65rem;font-family:'DM Mono',monospace;color:var(--amber);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.7rem;">🔒 VOID-Sicherheit</div>
+          <div style="font-size:.92rem;font-weight:600;margin-bottom:.5rem;">Kein QR-Code kann unbemerkt verschoben werden</div>
+          <div style="font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:1rem;">Beim Abziehen erscheint dauerhaft das VOID-Muster auf der Oberfläche. Admin wird informiert — neues Etikett in 1 Klick nachdrucken, gleiche UUID, kein Datenverlust.</div>
+          <div style="display:flex;gap:.7rem;">
+            <div style="flex:1;background:rgba(0,224,150,.08);border:1px solid rgba(0,224,150,.2);border-radius:8px;padding:.6rem .8rem;text-align:center;">
+              <div style="font-size:.7rem;color:var(--green);font-weight:700;">✓ Intakt</div>
+              <div style="font-size:.65rem;color:var(--muted);margin-top:.2rem;">Scanfähig</div>
+            </div>
+            <div style="flex:1;background:rgba(255,76,76,.08);border:1px solid rgba(255,76,76,.2);border-radius:8px;padding:.6rem .8rem;text-align:center;">
+              <div style="font-size:.7rem;color:var(--red);font-weight:700;">VOID!</div>
+              <div style="font-size:.65rem;color:var(--muted);margin-top:.2rem;">Sofort erkennbar</div>
+            </div>
+          </div>
+        </div>
+        <div style="background:rgba(0,194,224,.07);border:1px solid rgba(0,194,224,.2);border-radius:14px;padding:1.3rem;flex:1;">
+          <div style="font-size:.65rem;font-family:'DM Mono',monospace;color:var(--cyan);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.7rem;">🛡️ Die Kernaussage</div>
+          <div style="font-size:1.05rem;font-weight:600;line-height:1.4;margin-bottom:.6rem;">Die UUID ist der digitale Zwilling des physischen Objekts — für immer.</div>
+          <div style="font-size:.8rem;color:var(--muted);line-height:1.6;">Etikett beschädigt? → Neues drucken, gleiche UUID.<br>Objekt umgezogen? → Standort ändern, gleiche UUID.<br>Gerät ersetzt? → Altes archivieren, neues anlegen.<br><span style="color:var(--green);font-weight:600;">In jedem Szenario: Kein Datenverlust.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-bottom"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════ SLIDE 7 — TIMELINE ═══ -->
+  <div class="slide" id="s7">
+    <div class="grid-bg"></div>
+    <div class="slide-header">
+      <div class="slide-title-wrap">
+        <div class="slide-eyebrow">Umsetzungsplan</div>
+        <h2 class="slide-title">Go-Live in 11 Wochen.</h2>
+      </div>
+      <div style="text-align:right;position:relative;z-index:2;">
+        <div style="font-family:'Syne',sans-serif;font-size:2.8rem;font-weight:800;color:var(--cyan);line-height:1;">204 Std.</div>
+        <div style="font-size:.75rem;color:var(--muted);">Gesamtaufwand · 4 Phasen</div>
+      </div>
+    </div>
+    <div class="timeline-wrap">
+      <div class="tl-line">
+        <div class="tl-progress" id="tlProgress"></div>
+      </div>
+      <div class="tl-phases stagger">
+        <div class="tl-phase ph1">
+          <div class="tl-dot-line"></div>
+          <div class="tl-weeks">Woche 1</div>
+          <div class="tl-label">Kick-off</div>
+          <div class="tl-items">
+            <div class="tl-item">Anforderungen finalisieren</div>
+            <div class="tl-item">Objektliste übergeben</div>
+            <div class="tl-item">Techniker erfassen</div>
+          </div>
+        </div>
+        <div class="tl-phase ph2">
+          <div class="tl-dot-line"></div>
+          <div class="tl-weeks">Woche 2–5</div>
+          <div class="tl-label">Phase 1–2</div>
+          <div class="tl-items">
+            <div class="tl-item">Datenbank & Sicherheit</div>
+            <div class="tl-item">Techniker-App + QR-Scan</div>
+            <div class="tl-item">Wartungsformular & Unterschrift</div>
+          </div>
+        </div>
+        <div class="tl-phase ph3">
+          <div class="tl-dot-line"></div>
+          <div class="tl-weeks">Woche 6–10</div>
+          <div class="tl-label">Phase 3–4</div>
+          <div class="tl-items">
+            <div class="tl-item">Admin-Dashboard & Kalender</div>
+            <div class="tl-item">PDF-Export & Benachrichtigungen</div>
+            <div class="tl-item">QR-Druck & Bulk-Import</div>
+          </div>
+        </div>
+        <div class="tl-phase ph4">
+          <div class="tl-dot-line"></div>
+          <div class="tl-weeks">Woche 11</div>
+          <div class="tl-label">Go-Live 🚀</div>
+          <div class="tl-items">
+            <div class="tl-item">Einschulung Techniker & Objektleiter</div>
+            <div class="tl-item">Produktiver Betrieb aller 3 Standorte</div>
+            <div class="tl-item">Begleitung in den ersten Wochen</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-bar" style="margin-bottom:1.5rem;">Laufende Kosten: ca. <strong style="color:var(--white);">€ 45–50 / Monat</strong> (Vercel Pro + Supabase Pro) · EU-Hosting · DSGVO-konform · Tägliche Backups</div>
+    <div class="slide-bottom"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════ SLIDE 8 — CLOSING ═══ -->
+  <div class="slide" id="s8">
+    <div class="grid-bg"></div>
+    <div class="glow glow-cyan" style="width:600px;height:600px;top:50%;left:50%;transform:translate(-50%,-50%);position:absolute;opacity:.3;"></div>
+    <div class="scan-pulse" style="width:300px;height:300px;position:absolute;top:50%;left:50%;"></div>
+    <div class="scan-pulse scan-pulse2" style="width:420px;height:420px;position:absolute;top:50%;left:50%;"></div>
+    <div class="scan-pulse scan-pulse3" style="width:540px;height:540px;position:absolute;top:50%;left:50%;"></div>
+    <div class="closing-inner">
+      <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--cyan);letter-spacing:.2em;text-transform:uppercase;">FacilityCheck · ISS Austria · März 2026</div>
+      <h2 class="closing-big">Bereit für den<br>nächsten Schritt?</h2>
+      <p class="closing-sub">FacilityCheck ist für ISS Austria maßgeschneidert — drei Standorte, neun Techniker, ein System. Startklar in 11 Wochen.</p>
+      <div class="closing-cta">
+        <div class="dot"></div>
+        Bryan Lagus · IT-Projektentwicklung · Wien
+      </div>
+      <div class="closing-contact">März 2026 · Vertraulich — nur für den internen Gebrauch</div>
+    </div>
+    <div class="slide-bottom"></div>
+  </div>
+
+</div><!-- deck -->
+
+<!-- ── NAV ── -->
+<div class="nav" id="nav"></div>
+<div class="nav-arrows left"><button class="arr-btn" id="prevBtn">←</button></div>
+<div class="nav-arrows right"><button class="arr-btn" id="nextBtn">→</button></div>
+<div class="slide-counter" id="slideCounter">1 / 8</div>
+
+<script>
+// ── SLIDE CONTROLLER ──────────────────────────────────
+const TOTAL = 8;
+let cur = 0;
+
+const nav = document.getElementById('nav');
+for(let i=0;i<TOTAL;i++){
+  const d = document.createElement('div');
+  d.className='ndot'+(i===0?' on':'');
+  d.id='nd'+i; d.onclick=()=>goTo(i);
+  nav.appendChild(d);
+}
+
+function goTo(i){
+  document.getElementById('s'+(cur+1)).classList.remove('active');
+  document.getElementById('nd'+cur).classList.remove('on');
+  cur = ((i%TOTAL)+TOTAL)%TOTAL;
+  document.getElementById('s'+(cur+1)).classList.add('active');
+  document.getElementById('nd'+cur).classList.add('on');
+  document.getElementById('slideCounter').textContent=(cur+1)+' / '+TOTAL;
+  onSlideEnter(cur);
+}
+
+document.getElementById('nextBtn').onclick=()=>goTo(cur+1);
+document.getElementById('prevBtn').onclick=()=>goTo(cur-1);
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' ')goTo(cur+1);
+  if(e.key==='ArrowLeft')goTo(cur-1);
+});
+
+// ── SLIDE ENTER HOOKS ─────────────────────────────────
+function onSlideEnter(i){
+  if(i===3) initDemo();   // Demo slide
+  if(i===6) animateTimeline(); // Timeline
+}
+
+// ── TIMELINE ANIMATION ────────────────────────────────
+function animateTimeline(){
+  const bar = document.getElementById('tlProgress');
+  if(!bar) return;
+  bar.style.width='0';
+  setTimeout(()=>{ bar.style.width='100%'; }, 200);
+}
+
+// ── DEMO PHONE LOGIC ──────────────────────────────────
+const demoScenes = [
+  { layer:'dl0', step:'Schritt 1 von 6', title:'Anmelden', body:'Techniker wählt seinen Namen aus dem Dropdown — kein Passwort, kein Stress. Magic Link oder gespeicherte Session.', tag:'Techniker-App', tagClass:'' },
+  { layer:'dl1', step:'Schritt 2 von 6', title:'Heutige Aufgaben', body:'Dragan sieht sofort seine 2 offenen Wartungen für heute. Klarer Überblick — welche Objekte, welcher Standort, welcher Status.', tag:'Tagesübersicht', tagClass:'green' },
+  { layer:'dl2', step:'Schritt 3 von 6', title:'QR-Code scannen', body:'Smartphone auf den QR-Code am Objekt halten — Browser öffnet sich sofort. Kein App-Install, kein Suchen, kein Tippen.', tag:'Kamera', tagClass:'' },
+  { layer:'dl3', step:'Schritt 4 von 6', title:'Objekt öffnet sich', body:'Name, Standort, Wartungsintervall und letzter Eintrag — sofort sichtbar. Gelbe Warnung: Wartung seit 8 Tagen fällig.', tag:'Echtzeit', tagClass:'green' },
+  { layer:'dl4', step:'Schritt 5 von 6', title:'Wartung dokumentieren', body:'Datum und Techniker automatisch gesetzt. Notiz schreiben, digital unterschreiben — Wartung abschließen. Unter 60 Sekunden.', tag:'< 60 Sekunden', tagClass:'amber' },
+  { layer:'dl5', step:'Schritt 6 von 6', title:'Gespeichert & sichtbar!', body:'Grüne Bestätigung erscheint. Der Objektleiter sieht diesen Eintrag in Echtzeit im Admin-Dashboard — kein Telefonat nötig.', tag:'Objektleiter sieht es', tagClass:'green' },
+];
+
+let demoCur = 0, demoTimer = null;
+let demoInited = false;
+
+// Build dots
+const demoDots = document.getElementById('demoDots');
+demoScenes.forEach((_,i)=>{
+  const d=document.createElement('div');
+  d.className='demo-dot'+(i===0?' on':'');
+  d.id='dd'+i; d.onclick=()=>demoGoTo(i);
+  demoDots.appendChild(d);
+});
+
+function demoFlash(cb){
+  const f=document.getElementById('dpFlash');
+  f.style.opacity='.9';
+  setTimeout(()=>{ f.style.opacity='0'; if(cb)cb(); },150);
+}
+
+function demoShowLayer(id){
+  document.querySelectorAll('.dp-layer').forEach(l=>l.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+
+function demoUpdateInfo(sc){
+  document.getElementById('demoStepLabel').textContent=sc.step;
+  document.getElementById('demoStep').textContent=sc.title;
+  document.getElementById('demoTitle').textContent=sc.title;
+  document.getElementById('demoBody').textContent=sc.body;
+  const tag=document.getElementById('demoTag');
+  tag.textContent=sc.tag;
+  tag.className='demo-info-tag'+(sc.tagClass?' '+sc.tagClass:'');
+}
+
+function demoUpdateDots(i){
+  demoScenes.forEach((_,j)=>{
+    const d=document.getElementById('dd'+j);
+    if(d) d.className='demo-dot'+(j===i?' on':'');
+  });
+}
+
+function demoGoTo(i){
+  if(demoTimer) clearTimeout(demoTimer);
+  demoCur=i;
+  demoUpdateDots(i);
+  demoUpdateInfo(demoScenes[i]);
+  demoFlash(()=>{ demoShowLayer(demoScenes[i].layer); });
+  demoTimer=setTimeout(()=>demoGoTo((demoCur+1)%demoScenes.length),5000);
+}
+
+function initDemo(){
+  if(demoInited) return;
+  demoInited=true;
+  demoUpdateInfo(demoScenes[0]);
+  demoShowLayer(demoScenes[0].layer);
+  demoUpdateDots(0);
+  demoTimer=setTimeout(()=>demoGoTo(1),5000);
+}
+
+// Click phone to advance
+document.getElementById('dpScreen').addEventListener('click',()=>demoGoTo((demoCur+1)%demoScenes.length));
+</script>
+</body>
+</html>
